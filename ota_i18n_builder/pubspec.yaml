@@ -1,0 +1,20 @@
+name: ota_i18n_builder
+description: A CLI code generator for the ota_i18n library to provide type-safe translation access.
+version: 1.0.0
+homepage: https://github.com/your-username/ota_i18n
+repository: https://github.com/your-username/ota_i18n/tree/main/ota_i18n_builder
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+executables:
+  ota_i18n_builder: ota_i18n_builder
+
+dependencies:
+  args: ^2.4.2
+  dart_style: ^2.3.2
+  path: ^1.9.0
+
+dev_dependencies:
+  lints: ^3.0.0
+  test: ^1.24.0

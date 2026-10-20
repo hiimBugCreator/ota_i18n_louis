@@ -1,0 +1,25 @@
+name: ota_i18n_louis
+description: A robust, type-safe, and framework-agnostic Over-The-Air (OTA) internationalization solution for Flutter.
+version: 1.0.0
+homepage: https://github.com/your-username/ota_i18n_louis
+repository: https://github.com/your-username/ota_i18n_louis
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: '>=1.17.0'
+
+executables:
+  ota_builder: ota_i18n_builder
+
+dependencies:
+  flutter:
+    sdk: flutter
+  meta: ^1.11.0
+  args: ^2.4.2
+  dart_style: ^2.3.2
+  path: ^1.9.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0

@@ -1,0 +1,20 @@
+name: ota_i18n
+description: A robust, type-safe, and framework-agnostic Over-The-Air (OTA) internationalization solution for Flutter and Dart.
+version: 1.0.0
+homepage: https://github.com/your-username/ota_i18n
+repository: https://github.com/your-username/ota_i18n/tree/main/ota_i18n
+issue_tracker: https://github.com/your-username/ota_i18n/issues
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: '>=1.17.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  meta: ^1.11.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
