@@ -5,6 +5,13 @@ homepage: https://github.com/hiimBugCreator/ota_i18n_louis
 repository: https://github.com/hiimBugCreator/ota_i18n_louis.git
 issue_tracker: https://github.com/hiimBugCreator/ota_i18n_louis/issues
 
+topics:
+  - i18n
+  - localization
+  - ota
+  - flutter
+  - internationalization
+
 environment:
   sdk: '>=3.0.0 <4.0.0'
   flutter: '>=1.17.0'

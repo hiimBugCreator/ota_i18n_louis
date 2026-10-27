@@ -1,33 +1,58 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:args/args.dart';
 import 'package:dart_style/dart_style.dart';
 
-String toCamelCase(String path) {
+/// Converts a path string to CamelCase for class naming.
+String toCamelCase(final String path) {
   final words = path.replaceAll('.', ' ').replaceAll('_', ' ').split(' ');
-  return words.map((w) => w.isEmpty ? '' : w[0].toUpperCase() + w.substring(1)).join('');
+  return words
+      .map((w) => w.isEmpty ? '' : w[0].toUpperCase() + w.substring(1))
+      .join('');
 }
 
-void main(List<String> args) {
-  String jsonPath = 'assets/i18n/default.json';
-  String dartPath = 'lib/gen/app_texts.dart';
-  String helperClass = 'AppTexts';
+/// CLI entry point for the OTA translation builder.
+///
+/// This tool generates type-safe Dart classes from a JSON localization file.
+void main(final List<String> args) {
+  final parser = ArgParser()
+    ..addOption('json',
+        abbr: 'j',
+        help: 'Path to the source JSON file',
+        defaultsTo: 'assets/i18n/default.json')
+    ..addOption('out',
+        abbr: 'o',
+        help: 'Path where the Dart file will be generated',
+        defaultsTo: 'lib/gen/app_texts.dart')
+    ..addOption('class',
+        abbr: 'c',
+        help: 'Name of the main helper class',
+        defaultsTo: 'AppTexts')
+    ..addFlag('help',
+        abbr: 'h', negatable: false, help: 'Show usage information');
 
-  for (final arg in args) {
-    if (arg.startsWith('--json=')) jsonPath = arg.substring(7);
-    if (arg.startsWith('--out=')) dartPath = arg.substring(6);
-    if (arg.startsWith('--class=')) helperClass = arg.substring(8);
-  }
+  final argResults = parser.parse(args);
 
-  final file = File(jsonPath);
-  if (!file.existsSync()) {
-    print('❌ Không tìm thấy JSON tại: $jsonPath');
+  if (argResults['help'] as bool) {
+    stdout.writeln('Usage: dart run ota_i18n_louis:ota_builder [options]');
+    stdout.writeln(parser.usage);
     return;
   }
 
-  final Map<String, dynamic> data = jsonDecode(file.readAsStringSync());
+  final jsonPath = argResults['json'] as String;
+  final dartPath = argResults['out'] as String;
+  final helperClass = argResults['class'] as String;
 
-  final StringBuffer code = StringBuffer();
-  final StringBuffer classes = StringBuffer();
+  final file = File(jsonPath);
+  if (!file.existsSync()) {
+    stderr.writeln('❌ Không tìm thấy JSON tại: $jsonPath');
+    return;
+  }
+
+  final data = jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
+
+  final code = StringBuffer();
+  final classes = StringBuffer();
 
   code.writeln('''
 // AUTO-GENERATED FILE. DO NOT MODIFY.
@@ -37,6 +62,7 @@ void main(List<String> args) {
 
 import 'package:ota_i18n_louis/ota_i18n_louis.dart';
 
+/// Main access point for generated translations.
 class $helperClass {
 ''');
 
@@ -47,9 +73,10 @@ class $helperClass {
       code.writeln('  static final $module = $className();');
     }
   });
-  code.writeln('}'); // Đóng class chính
+  code.writeln('}'); // Close main class
 
-  void generateClass(String className, Map<String, dynamic> node, String currentPath) {
+  void generateClass(final String className, final Map<String, dynamic> node,
+      final String currentPath) {
     classes.writeln('class $className {');
     final childGens = <Function>[];
 
@@ -62,24 +89,33 @@ class $helperClass {
         classes.writeln('  final $key = $childClassName();');
         childGens.add(() => generateClass(childClassName, value, pathScript));
       } else {
-        // Xử lý biến {{param}}
-        final safeValue = value.toString().replaceAll(r'\', r'\\').replaceAll("'", r"\'").replaceAll('\n', r'\n');
+        final safeValue = value
+            .toString()
+            .replaceAll(r'\', r'\\')
+            .replaceAll("'", r"\'")
+            .replaceAll('\n', r'\n');
         final regex = RegExp(r'\{\{([a-zA-Z0-9_]+)\}\}');
         final matches = regex.allMatches(safeValue);
 
         if (matches.isEmpty) {
-          classes.writeln("  String get $key => OtaI18n.instance.getText('$pathScript', '$safeValue');");
+          classes.writeln(
+              "  String get $key => OtaI18n.instance.getText('$pathScript', '$safeValue');");
         } else {
           final params = matches.map((m) => m.group(1)!).toSet();
-          final methodParams = params.map((p) => 'required String $p').join(', ');
-          final replaceChain = params.map((p) => ".replaceAll('{{$p}}', $p)").join('');
-          classes.writeln("  String $key({$methodParams}) => OtaI18n.instance.getText('$pathScript', '$safeValue')$replaceChain;");
+          final methodParams =
+              params.map((p) => 'required String $p').join(', ');
+          final replaceChain =
+              params.map((p) => ".replaceAll('{{$p}}', $p)").join('');
+          classes.writeln(
+              "  String $key({$methodParams}) => OtaI18n.instance.getText('$pathScript', '$safeValue')$replaceChain;");
         }
       }
     });
 
     classes.writeln('}\n');
-    for (final gen in childGens) gen();
+    for (final gen in childGens) {
+      gen();
+    }
   }
 
   data.forEach((module, value) {
@@ -91,13 +127,14 @@ class $helperClass {
 
   code.write(classes.toString());
 
-  // Format code bằng dart_style trước khi ghi
   final formatter = DartFormatter();
   final formattedCode = formatter.format(code.toString());
 
   final outFile = File(dartPath);
-  if (!outFile.parent.existsSync()) outFile.parent.createSync(recursive: true);
+  if (!outFile.parent.existsSync()) {
+    outFile.parent.createSync(recursive: true);
+  }
   outFile.writeAsStringSync(formattedCode);
 
-  print('✅ Generated thành công: $dartPath');
+  stdout.writeln('✅ Generated successfully: $dartPath');
 }
